@@ -459,7 +459,7 @@ UniValue signrawtransactionwithkeynochecks(const JSONRPCRequest& request, UniVal
         keystore.AddKey(key);
     }
 
-    return SignTransactison(mtx, request.params[6], &keystore, true, request.params[7]);
+    return SignTransaction(mtx, request.params[6], &keystore, true, request.params[7]);
 }
 
 UniValue createsignrawtransaction(const JSONRPCRequest& request) {
