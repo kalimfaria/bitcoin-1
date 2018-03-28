@@ -421,7 +421,7 @@ UniValue verifytxoutproof(const JSONRPCRequest& request)
 }
 
 bool validateParams (const JSONRPCRequest& request) {
-    if (request.fHelp || request.params.size() < 2) {
+    if (request.fHelp || request.params.size() < 3) {
         throw std::runtime_error("Incorrect input");
     }
     RPCTypeCheck(request.params, {
@@ -436,7 +436,7 @@ bool validateParams (const JSONRPCRequest& request) {
                  }, true
     );
     if (request.params[0].isNull() || request.params[1].isNull() || request.params[2].isNull() )
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1, 2  and 3 must be non-null");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1, 2 and 3 must be non-null");
     return true;
 }
 
