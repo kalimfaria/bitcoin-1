@@ -60,10 +60,16 @@ void RPCTypeCheck(const UniValue& params,
 
         const UniValue& v = params[i];
         if (!(fAllowNull && v.isNull())) {
-            std::cout << "Inside RPCType check " << i << std::endl;
-            RPCTypeCheckArgument(v, t);
+            RPCTypeCheckArgument(v, t, i);
         }
         i++;
+    }
+}
+
+void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected, int index)
+{
+    if (!typeExpected.typeAny && value.type() != typeExpected.type) {
+        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s, index %d", uvTypeName(typeExpected.type), uvTypeName(value.type())), index);
     }
 }
 
