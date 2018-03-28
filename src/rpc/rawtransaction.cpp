@@ -35,7 +35,111 @@
 #include <stdint.h>
 
 #include <univalue.h>
+#include "server.h"
 
+UniValue createrawtransactionnochecks(const JSONRPCRequest& request)
+{
+    UniValue inputs = request.params[0].get_array();
+    const bool outputs_is_obj = request.params[1].isObject();
+    UniValue outputs = outputs_is_obj ?
+                       request.params[1].get_obj() :
+                       request.params[1].get_array();
+
+    CMutableTransaction rawTx;
+
+    /* if (!request.params[3].isNull()) {
+         int64_t nLockTime = request.params[3].get_int64();
+         if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
+             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
+         rawTx.nLockTime = nLockTime;
+     } */
+
+    bool rbfOptIn = request.params[4].isTrue();
+
+    for (unsigned int idx = 0; idx < inputs.size(); idx++) {
+        const UniValue& input = inputs[idx];
+        const UniValue& o = input.get_obj();
+
+        uint256 txid = ParseHashO(o, "txid");
+
+        const UniValue& vout_v = find_value(o, "vout");
+        if (!vout_v.isNum())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing vout key");
+        int nOutput = vout_v.get_int();
+        if (nOutput < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
+
+        uint32_t nSequence;
+        if (rbfOptIn) {
+            nSequence = MAX_BIP125_RBF_SEQUENCE;
+        } else if (rawTx.nLockTime) {
+            nSequence = std::numeric_limits<uint32_t>::max() - 1;
+        } else {
+            nSequence = std::numeric_limits<uint32_t>::max();
+        }
+
+        // set the sequence number if passed in the parameters object
+        const UniValue& sequenceObj = find_value(o, "sequence");
+        if (sequenceObj.isNum()) {
+            int64_t seqNr64 = sequenceObj.get_int64();
+            if (seqNr64 < 0 || seqNr64 > std::numeric_limits<uint32_t>::max()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, sequence number is out of range");
+            } else {
+                nSequence = (uint32_t)seqNr64;
+            }
+        }
+
+        CTxIn in(COutPoint(txid, nOutput), CScript(), nSequence);
+
+        rawTx.vin.push_back(in);
+    }
+
+    std::set<CTxDestination> destinations;
+    if (!outputs_is_obj) {
+        // Translate array of key-value pairs into dict
+        UniValue outputs_dict = UniValue(UniValue::VOBJ);
+        for (size_t i = 0; i < outputs.size(); ++i) {
+            const UniValue& output = outputs[i];
+            if (!output.isObject()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair not an object as expected");
+            }
+            if (output.size() != 1) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair must contain exactly one key");
+            }
+            outputs_dict.pushKVs(output);
+        }
+        outputs = std::move(outputs_dict);
+    }
+    for (const std::string& name_ : outputs.getKeys()) {
+        if (name_ == "data") {
+            std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
+
+            CTxOut out(0, CScript() << OP_RETURN << data);
+            rawTx.vout.push_back(out);
+        } else {
+            CTxDestination destination = DecodeDestination(name_);
+            if (!IsValidDestination(destination)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name_);
+            }
+
+            if (!destinations.insert(destination).second) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name_);
+            }
+
+            CScript scriptPubKey = GetScriptForDestination(destination);
+            CAmount nAmount = AmountFromValue(outputs[name_]);
+
+            CTxOut out(nAmount, scriptPubKey);
+            rawTx.vout.push_back(out);
+        }
+    }
+
+    if (!request.params[4].isNull() && rbfOptIn != SignalsOptInRBF(rawTx)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number(s) contradict replaceable option");
+    }
+
+    return EncodeHexTx(rawTx);
+}
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
@@ -315,6 +419,57 @@ UniValue verifytxoutproof(const JSONRPCRequest& request)
         res.push_back(hash.GetHex());
     return res;
 }
+
+bool validateParams (const JSONRPCRequest& request) {
+    if (request.fHelp || request.params.size() < 2) {
+        throw std::runtime_error("Incorrect input");
+    }
+    RPCTypeCheck(request.params, {
+                         UniValue::VARR, // input
+                         UniValueType(), // output
+                         UniValue::VARR, // keys
+                         UniValue::VNUM,
+                         UniValue::VBOOL,
+                         UniValue::VSTR, // hex string for the transaction
+                         UniValue::VARR,
+                         UniValue::VSTR
+                 }, true
+    );
+    if (request.params[0].isNull() || request.params[1].isNull() || request.params[2].isNull() )
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1, 2  and 3 must be non-null");
+    return true;
+}
+
+
+UniValue signrawtransactionwithkeynochecks(const JSONRPCRequest& request, UniValue hex)
+{
+    CMutableTransaction mtx;
+    if (!DecodeHexTx(mtx, hex.get_str(), true)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    CBasicKeyStore keystore;
+    const UniValue& keys = request.params[2].get_array();
+    for (unsigned int idx = 0; idx < keys.size(); ++idx) {
+        UniValue k = keys[idx];
+        CKey key = DecodeSecret(k.get_str());
+        if (!key.IsValid()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+        }
+        keystore.AddKey(key);
+    }
+
+    return SignTransaction(mtx, request.params[2], &keystore, true, request.params[3]);
+}
+
+UniValue createsignrawtransaction(const JSONRPCRequest& request) {
+    validateParams(request);
+    UniValue hexString = createrawtransactionnochecks(request);
+    return signrawtransactionwithkeynochecks(request, hexString);
+}
+
+
+
 
 UniValue createrawtransaction(const JSONRPCRequest& request)
 {
@@ -1145,7 +1300,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
     { "rawtransactions",    "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
-
+    { "rawtransactions",    "createsignrawtransaction",     &createsignrawtransaction,   {"inputs","outputs","privkeys","locktime","replaceable","hexstring","prevtxs","sighashtype"} },
     { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
 };
