@@ -47,12 +47,12 @@ UniValue createrawtransactionnochecks(const JSONRPCRequest& request)
 
     CMutableTransaction rawTx;
 
-    /* if (!request.params[3].isNull()) {
+     if (!request.params[3].isNull()) {
          int64_t nLockTime = request.params[3].get_int64();
          if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
              throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
          rawTx.nLockTime = nLockTime;
-     } */
+     }
 
     bool rbfOptIn = request.params[4].isTrue();
 
@@ -459,7 +459,7 @@ UniValue signrawtransactionwithkeynochecks(const JSONRPCRequest& request, UniVal
         keystore.AddKey(key);
     }
 
-    return SignTransaction(mtx, request.params[2], &keystore, true, request.params[3]);
+    return SignTransactison(mtx, request.params[6], &keystore, true, request.params[7]);
 }
 
 UniValue createsignrawtransaction(const JSONRPCRequest& request) {
@@ -1300,7 +1300,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
     { "rawtransactions",    "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
-    { "rawtransactions",    "createsignrawtransaction",     &createsignrawtransaction,   {"inputs","outputs","privkeys","locktime","replaceable","hexstring","prevtxs","sighashtype"} },
+    { "rawtransactions",    "createsignrawtransaction",     &createsignrawtransaction,  {"inputs","outputs","privkeys","locktime","replaceable","hexstring","prevtxs","sighashtype"} },
     { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
 };
