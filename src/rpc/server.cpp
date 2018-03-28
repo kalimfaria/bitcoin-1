@@ -60,6 +60,7 @@ void RPCTypeCheck(const UniValue& params,
 
         const UniValue& v = params[i];
         if (!(fAllowNull && v.isNull())) {
+            std::cout << "Inside RPCType check " << i << std::endl;
             RPCTypeCheckArgument(v, t);
         }
         i++;

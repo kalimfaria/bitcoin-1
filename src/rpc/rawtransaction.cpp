@@ -35,10 +35,11 @@
 #include <stdint.h>
 
 #include <univalue.h>
+#include <iostream>
 #include "server.h"
 
 UniValue createrawtransactionnochecks(const JSONRPCRequest& request)
-{
+{   std::cout << "Entered createrawtransactionnochecks" << std::endl;
     UniValue inputs = request.params[0].get_array();
     const bool outputs_is_obj = request.params[1].isObject();
     UniValue outputs = outputs_is_obj ?
@@ -437,6 +438,7 @@ bool validateParams (const JSONRPCRequest& request) {
     );
     if (request.params[0].isNull() || request.params[1].isNull() || request.params[2].isNull() )
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1, 2 and 3 must be non-null");
+    std::cout << "End of transaction validation" << std::endl;
     return true;
 }
 
@@ -463,6 +465,7 @@ UniValue signrawtransactionwithkeynochecks(const JSONRPCRequest& request, UniVal
 }
 
 UniValue createsignrawtransaction(const JSONRPCRequest& request) {
+    std::cout << "Entered createsignrawtransaction" << std::endl;
     validateParams(request);
     UniValue hexString = createrawtransactionnochecks(request);
     return signrawtransactionwithkeynochecks(request, hexString);
