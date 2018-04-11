@@ -38,7 +38,7 @@
 #include <iostream>
 #include "server.h"
 
-UniValue createrawtransactionnochecks(const JSONRPCRequest& request)
+UniValue createrawtransactionnochecks(const JSONRPCRequest& request, uint256 transaction)
 {   std::cout << "Entered createrawtransactionnochecks" << std::endl;
     UniValue inputs = request.params[0].get_array();
     const bool outputs_is_obj = request.params[1].isObject();
@@ -61,7 +61,8 @@ UniValue createrawtransactionnochecks(const JSONRPCRequest& request)
         const UniValue& input = inputs[idx];
         const UniValue& o = input.get_obj();
 
-        uint256 txid = ParseHashO(o, "txid");
+//        uint256 txid = ParseHashO(o, "txid");
+        uint256 txid = transaction;
 
         const UniValue& vout_v = find_value(o, "vout");
         if (!vout_v.isNum())
@@ -298,6 +299,81 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+uint256 gettxId(string hex)
+{
+    LOCK(cs_main);
+
+    CMutableTransaction mtx;
+
+    bool try_witness = true;
+    bool try_no_witness = true;
+
+    if (!DecodeHexTx(mtx, hex, try_no_witness, try_witness)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    return mtx.GetHash();
+    //UniValue result(UniValue::VOBJ);
+    //TxToUniv(CTransaction(std::move(mtx)), uint256(), result, false);
+
+    //return result;
+}
+
+UniValue gethextransaction(const JSONRPCRequest& request)
+{
+    LOCK(cs_main);
+
+    bool in_active_chain = true;
+    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    CBlockIndex* blockindex = nullptr;
+
+    if (hash == Params().GenesisBlock().hashMerkleRoot) {
+        // Special exception for the genesis block coinbase transaction
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
+    }
+
+    // Accept either a bool (true) or a num (>=1) to indicate verbose output.
+    bool fVerbose = false;
+    if (!request.params[1].isNull()) {
+        fVerbose = request.params[1].isNum() ? (request.params[1].get_int() != 0) : request.params[1].get_bool();
+    }
+
+    if (!request.params[2].isNull()) {
+        uint256 blockhash = ParseHashV(request.params[2], "parameter 3");
+        blockindex = LookupBlockIndex(blockhash);
+        if (!blockindex) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
+        }
+        in_active_chain = chainActive.Contains(blockindex);
+    }
+
+    CTransactionRef tx;
+    uint256 hash_block;
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, blockindex)) {
+        std::string errmsg;
+        if (blockindex) {
+            if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
+            }
+            errmsg = "No such transaction found in the provided block";
+        } else {
+            errmsg = fTxIndex
+                     ? "No such mempool or blockchain transaction"
+                     : "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
+        }
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+    }
+
+    if (!fVerbose) {
+        return EncodeHexTx(*tx, RPCSerializationFlags());
+    }
+
+    UniValue result(UniValue::VOBJ);
+    if (blockindex) result.pushKV("in_active_chain", in_active_chain);
+    TxToJSON(*tx, hash_block, result);
+    return result;
+}
+
 UniValue gettxoutproof(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2))
@@ -465,9 +541,11 @@ UniValue signrawtransactionwithkeynochecks(const JSONRPCRequest& request, UniVal
 }
 
 UniValue createsignrawtransaction(const JSONRPCRequest& request) {
-    std::cout << "Entered createsignrawtransaction" << std::endl;
     validateParams(request);
-    UniValue hexString = createrawtransactionnochecks(request);
+
+    UniValue hex = gethextransaction(request);
+    uint256 fullTransaction = gettxId(hex.to_str());
+    UniValue hexString = createrawtransactionnochecks(request, fullTransaction);
     return signrawtransactionwithkeynochecks(request, hexString);
 }
 
