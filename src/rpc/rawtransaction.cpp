@@ -52,8 +52,6 @@ UniValue sendsignedrawtransaction(std::string hex)
     const uint256& hashTx = tx->GetHash();
 
     CAmount nMaxRawTxFee = maxTxFee;
-    if (!request.params[1].isNull() && request.params[1].get_bool())
-        nMaxRawTxFee = 0;
 
     { // cs_main scope
         LOCK(cs_main);
