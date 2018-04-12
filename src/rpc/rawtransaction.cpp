@@ -543,13 +543,8 @@ UniValue createsignrawtransaction(const JSONRPCRequest& request) {
     validateParams(request);
     UniValue hexString = createrawtransactionnochecks(request);
     UniValue signedTransaction = signrawtransactionwithkeynochecks(request, hexString);
-
-    if (signedTransaction.isObject()) {
-        for (unsigned int i = 0; i < signedTransaction.keys.size(); i++)
-            if (signedTransaction.keys[i] == "hex")
-                return sendsignedrawtransaction(signedTransaction.values.at(i));
-
-    return signedTransaction;
+    std::string result = find_value(signedTransaction, "hex");
+    return sendsignedrawtransaction(result);
 }
 
 
