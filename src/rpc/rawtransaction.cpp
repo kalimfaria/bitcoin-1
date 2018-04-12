@@ -38,7 +38,7 @@
 #include <iostream>
 #include "server.h"
 
-UniValue sendsignedrawtransaction(string hex)
+UniValue sendsignedrawtransaction(std::string hex)
 {
     ObserveSafeMode();
 
