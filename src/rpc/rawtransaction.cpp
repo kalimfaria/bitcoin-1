@@ -36,7 +36,15 @@
 
 #include <univalue.h>
 #include <iostream>
+#include <fstream>
 #include "server.h"
+
+void writeToFile () {
+    std::ofstream myfile;
+    myfile.open ("/var/bitcoin/data/logs/log.csv");
+    myfile << "Writing this to a file.\n";
+    myfile.close();
+}
 
 UniValue sendsignedrawtransaction(std::string hex)
 {
@@ -242,6 +250,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 
 UniValue getrawtransaction(const JSONRPCRequest& request)
 {
+    writeToFile();
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
             "getrawtransaction \"txid\" ( verbose \"blockhash\" )\n"
@@ -539,7 +548,6 @@ UniValue signrawtransactionwithkeynochecks(const JSONRPCRequest& request, UniVal
 }
 
 UniValue createsignrawtransaction(const JSONRPCRequest& request) {
-    std::cout << "Entered createsignrawtransaction" << std::endl;
     validateParams(request);
     UniValue hexString = createrawtransactionnochecks(request);
     UniValue signedTransaction = signrawtransactionwithkeynochecks(request, hexString);
