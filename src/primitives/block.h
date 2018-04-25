@@ -117,6 +117,7 @@ public:
     }
 
     std::string ToString() const;
+    std::string ToSummaryString() const;
 };
 
 /** Describes a place in the block chain to another node such that if the
