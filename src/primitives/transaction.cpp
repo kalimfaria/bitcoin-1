@@ -96,11 +96,19 @@ unsigned int CTransaction::GetTotalSize() const
     return ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
 }
 
-std::string CTransaction::ToString() const
+std::string CTransaction::ToHashString() const
 {
     std::string str;
+    str += strprintf("CTransaction(hash=%s)\n", GetHash().ToString());
+    return str;
+}
+
+std::string CTransaction::ToString() const
+{
+
+    std::string str;
     str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%u, vout.size=%u, nLockTime=%u)\n",
-        GetHash().ToString().substr(0,10),
+    GetHash().ToString().substr(0,10),
         nVersion,
         vin.size(),
         vout.size(),
