@@ -147,7 +147,9 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         {
             coinbaseScript->KeepScript();
         }
+        LogPrint("Verification", pblock->ToString());
     }
+
     return blockHashes;
 }
 

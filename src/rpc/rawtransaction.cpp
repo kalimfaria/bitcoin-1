@@ -39,12 +39,6 @@
 #include <fstream>
 #include "server.h"
 
-void writeToFile (const std::string& input) {
-    std::ofstream myfile;
-    myfile.open ("/var/bitcoin/data/logs/log.csv");
-    myfile << input;
-    myfile.close();
-}
 
 UniValue sendsignedrawtransaction(std::string hex)
 {
@@ -121,7 +115,7 @@ UniValue sendsignedrawtransaction(std::string hex)
 
 
 UniValue createrawtransactionnochecks(const JSONRPCRequest& request)
-{   std::cout << "Entered createrawtransactionnochecks" << std::endl;
+{
     UniValue inputs = request.params[0].get_array();
     const bool outputs_is_obj = request.params[1].isObject();
     UniValue outputs = outputs_is_obj ?
@@ -250,8 +244,6 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 
 UniValue getrawtransaction(const JSONRPCRequest& request)
 {
-    writeToFile("Inside getrawtransaction");
-    LogPrintf("Inside getrawtransaction");
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
             "getrawtransaction \"txid\" ( verbose \"blockhash\" )\n"
@@ -554,7 +546,7 @@ UniValue createsignrawtransaction(const JSONRPCRequest& request) {
     UniValue signedTransaction = signrawtransactionwithkeynochecks(request, hexString);
     std::string hex = "hex";
     UniValue result = find_value(signedTransaction, hex);
-    writeToFile("Inside createsignrawtransaction");
+    LogPrint("Verification", result.get_str());
     return sendsignedrawtransaction(result.get_str());
 }
 
