@@ -346,6 +346,7 @@ public:
     }
 
     std::string ToString() const;
+    std::string CTransaction::ToHashString() const;
 
     bool HasWitness() const
     {
