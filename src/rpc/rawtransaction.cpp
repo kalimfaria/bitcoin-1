@@ -39,10 +39,10 @@
 #include <fstream>
 #include "server.h"
 
-void writeToFile () {
+void writeToFile (const std::string& input) {
     std::ofstream myfile;
     myfile.open ("/var/bitcoin/data/logs/log.csv");
-    myfile << "Writing this to a file.\n";
+    myfile << input;
     myfile.close();
 }
 
@@ -250,7 +250,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 
 UniValue getrawtransaction(const JSONRPCRequest& request)
 {
-    writeToFile();
+    writeToFile("Inside getrawtransaction");
+    LogPrintf("Inside getrawtransaction");
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
             "getrawtransaction \"txid\" ( verbose \"blockhash\" )\n"
@@ -553,6 +554,7 @@ UniValue createsignrawtransaction(const JSONRPCRequest& request) {
     UniValue signedTransaction = signrawtransactionwithkeynochecks(request, hexString);
     std::string hex = "hex";
     UniValue result = find_value(signedTransaction, hex);
+    writeToFile("Inside createsignrawtransaction");
     return sendsignedrawtransaction(result.get_str());
 }
 
