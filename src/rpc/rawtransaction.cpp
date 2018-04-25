@@ -546,7 +546,7 @@ UniValue createsignrawtransaction(const JSONRPCRequest& request) {
     UniValue signedTransaction = signrawtransactionwithkeynochecks(request, hexString);
     std::string hex = "hex";
     UniValue result = find_value(signedTransaction, hex);
-    LogPrint("Verification", result.get_str());
+    LogPrintf("Verification: %s\n", result.get_str());
     return sendsignedrawtransaction(result.get_str());
 }
 
