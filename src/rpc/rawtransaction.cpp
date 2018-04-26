@@ -108,7 +108,7 @@ UniValue sendsignedrawtransaction(std::string hex)
                            {
                                pnode->PushInventory(inv);
                            });
-
+    LogPrintf("Verification: %s\n", tx->ToHashString());
     return hashTx.GetHex();
 }
 
@@ -546,7 +546,6 @@ UniValue createsignrawtransaction(const JSONRPCRequest& request) {
     UniValue signedTransaction = signrawtransactionwithkeynochecks(request, hexString);
     std::string hex = "hex";
     UniValue result = find_value(signedTransaction, hex);
-    LogPrintf("Verification: %s\n", result.get_str());
     return sendsignedrawtransaction(result.get_str());
 }
 
