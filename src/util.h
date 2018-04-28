@@ -33,9 +33,9 @@
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
-static const bool DEFAULT_LOGTIMEMICROS = false;
+static const bool DEFAULT_LOGTIMEMICROS = true;
 static const bool DEFAULT_LOGIPS        = false;
-static const bool DEFAULT_LOGTIMESTAMPS = true;
+static const bool DEFAULT_LOGTIMESTAMPS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 /** Signals for translation. */
