@@ -2356,7 +2356,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
         }
 
-        LogPrintf("Verification: Msg type: CMPCTBLOCK %s", cmpctblock.header.GetHash());
+        LogPrintf("Verification: Msg type: CMPCTBLOCK %s", cmpctblock.header.GetHash().ToString());
         const CBlockIndex *pindex = nullptr;
         CValidationState state;
         if (!ProcessNewBlockHeaders({cmpctblock.header}, state, chainparams, &pindex)) {
