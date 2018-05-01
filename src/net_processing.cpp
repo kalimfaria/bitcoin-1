@@ -1919,12 +1919,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
 
             if (inv.type == MSG_TX) {
-                LogPrintf("Verification: Received INV Message %s from %d of type %s", inv.hash.ToString(), pfrom->GetId(), "block");
+                LogPrintf("Verification: Received INV Message %s from %d of type %s\n", inv.hash.ToString(), pfrom->GetId(), "tx");
                 inv.type |= nFetchFlags;
             }
 
             if (inv.type == MSG_BLOCK) {
-                LogPrintf("Verification: Received INV Message %s from %d of type %s", inv.hash.ToString(), pfrom->GetId(), "block");
+                LogPrintf("Verification: Received INV Message %s from %d of type %s\n", inv.hash.ToString(), pfrom->GetId(), "block");
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
                     // We used to request the full block here, but since headers-announcements are now the
@@ -2356,7 +2356,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
         }
 
-        LogPrintf("Verification: Msg type: CMPCTBLOCK %s", cmpctblock.header.GetHash().ToString());
+        LogPrintf("Verification: Msg type: CMPCTBLOCK %s\n", cmpctblock.header.GetHash().ToString());
         const CBlockIndex *pindex = nullptr;
         CValidationState state;
         if (!ProcessNewBlockHeaders({cmpctblock.header}, state, chainparams, &pindex)) {
@@ -2665,7 +2665,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         vRecv >> *pblock;
 
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
-        LogPrintf("Verification: %s received block from peer=%d %s\n", pblock->ToSummaryString().c_str(),pfrom->GetId());
+        LogPrintf("Verification: %s received block from peer=%d\n", pblock->ToSummaryString().c_str(),pfrom->GetId());
 
         bool forceProcessing = false;
         const uint256 hash(pblock->GetHash());
