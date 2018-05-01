@@ -1914,14 +1914,17 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (interruptMsgProc)
                 return true;
 
-            bool fAlreadyHave = AlreadyHave(inv);
+            bool fAlreadA giyHave = AlreadyHave(inv);
             LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->GetId());
 
+
             if (inv.type == MSG_TX) {
+                LogPrintf("Verification: Received INV Message %s from %d of type %s", inv.hash.ToString(), pfrom->GetId(), "block");
                 inv.type |= nFetchFlags;
             }
 
             if (inv.type == MSG_BLOCK) {
+                LogPrintf("Verification: Received INV Message %s from %d of type %s", inv.hash.ToString(), pfrom->GetId(), "block");
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
                     // We used to request the full block here, but since headers-announcements are now the
@@ -2618,7 +2621,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // disk-space attacks), but this should be safe due to the
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
-            LogPrintf("Verification: %s we requested this block =%d %s\n", pblock->ToSummaryString().c_str(), pfrom->GetId());
+            LogPrintf("Verification: %s we requested this block =%d\n", pblock->ToSummaryString().c_str(), pfrom->GetId());
             ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
