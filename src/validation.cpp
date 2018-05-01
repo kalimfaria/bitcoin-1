@@ -3461,7 +3461,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
-
+        LogPrintf("Verification: %s\n", pblock->ToSummaryString().c_str());
         LOCK(cs_main);
 
         if (ret) {

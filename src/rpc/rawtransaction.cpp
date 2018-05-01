@@ -12,6 +12,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <key_io.h>
+#include <key_io.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <policy/policy.h>

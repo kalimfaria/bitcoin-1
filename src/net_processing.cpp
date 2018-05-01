@@ -2533,7 +2533,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
+            LogPrintf("Verification: %s optimistically reconstructed block from %d %s\n", pblock->ToSummaryString().c_str(), pfrom->GetId());
             ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
+
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
@@ -2616,6 +2618,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // disk-space attacks), but this should be safe due to the
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
+            LogPrintf("Verification: %s we requested this block =%d %s\n", pblock->ToSummaryString().c_str(), pfrom->GetId());
             ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
@@ -2658,6 +2661,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         vRecv >> *pblock;
 
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
+        LogPrintf("Verification: %s received block from peer=%d %s\n", pblock->ToSummaryString().c_str(),pfrom->GetId());
 
         bool forceProcessing = false;
         const uint256 hash(pblock->GetHash());
