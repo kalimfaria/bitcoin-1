@@ -105,6 +105,7 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
 
 UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
+    LogPrintf("Verification: BlockMinted %s =%d\n", pblock->ToSummaryString().c_str());
     static const int nInnerLoopCount = 0x10000;
     int nHeightEnd = 0;
     int nHeight = 0;
@@ -140,7 +141,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
 
-        LogPrintf("Verification: BlockMinted %s =%d\n", pblock->ToSummaryString().c_str()));
+
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
 
