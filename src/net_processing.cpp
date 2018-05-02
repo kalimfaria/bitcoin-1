@@ -2538,7 +2538,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
             LogPrintf("Verification: %s optimistically reconstructed block from %d\n", pblock->ToSummaryString().c_str(), pfrom->GetId());
-            gProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
+            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
 
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
