@@ -137,7 +137,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         if (pblock->nNonce == nInnerLoopCount) {
             continue;
         }
-        LogPrintf("Verification: BlockMinted %s =%d\n", pblock->ToSummaryString().c_str());
+        LogPrintf("Verification: BlockMinted %s\n", pblock->ToSummaryString().c_str());
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
