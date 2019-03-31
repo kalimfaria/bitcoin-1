@@ -22,6 +22,7 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <reverse_iterator.h>
+#include <wallet/rpcwaller.h>
 #include <scheduler.h>
 #include <tinyformat.h>
 #include <txmempool.h>
@@ -2145,8 +2146,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         nodestate->pindexBestHeaderSent = pindex ? pindex : chainActive.Tip();
         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
     }
-
-
     else if (strCommand == NetMsgType::TX)
     {
         // Stop processing the transaction early if
@@ -2331,6 +2330,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 Misbehaving(pfrom->GetId(), nDoS);
             }
         }
+
+        generateSequentially(1);
     }
 
 

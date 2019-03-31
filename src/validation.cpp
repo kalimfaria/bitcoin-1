@@ -2600,6 +2600,26 @@ static void NotifyHeaderTip() {
     }
 }
 
+static void NotifyHeaderTipSequentially() {
+    bool fNotify = false;
+    bool fInitialBlockDownload = false;
+    static CBlockIndex* pindexHeaderOld = nullptr;
+    CBlockIndex* pindexHeader = nullptr;
+    {
+        pindexHeader = pindexBestHeader;
+
+        if (pindexHeader != pindexHeaderOld) {
+            fNotify = true;
+            fInitialBlockDownload = IsInitialBlockDownload();
+            pindexHeaderOld = pindexHeader;
+        }
+    }
+    // Send block tip changed notifications without cs_main
+    if (fNotify) {
+        uiInterface.NotifyHeaderTip(fInitialBlockDownload, pindexHeader);
+    }
+}
+
 /**
  * Make the best chain active, in multiple steps. The result is either failure
  * or an activated best chain. pblock is either nullptr or a pointer to a block
@@ -3446,6 +3466,34 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
         FlushStateToDisk(chainparams, state, FlushStateMode::NONE); // we just allocated more disk space for block files
 
     CheckBlockIndex(chainparams.GetConsensus());
+
+    return true;
+}
+
+bool ProcessNewBlockSequentially(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool *fNewBlock)
+{
+    CBlockIndex *pindex = nullptr;
+    if (fNewBlock) *fNewBlock = false;
+    CValidationState state;
+    // Ensure that CheckBlock() passes before calling AcceptBlock, as
+    // belt-and-suspenders.
+    bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
+    LogPrintf("Verification: %s\n", pblock->ToSummaryString().c_str());
+
+    if (ret) {
+        // Store to disk
+        ret = g_chainstate.AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
+    }
+    if (!ret) {
+        GetMainSignals().BlockChecked(*pblock, state);
+        return error("%s: AcceptBlock FAILED (%s)", __func__, state.GetDebugMessage());
+    }
+
+    NotifyHeaderTipSequentially();
+
+    CValidationState state; // Only used to report errors, not invalidity - ignore it
+    if (!g_chainstate.ActivateBestChain(state, chainparams, pblock))
+        return error("%s: ActivateBestChain failed", __func__);
 
     return true;
 }

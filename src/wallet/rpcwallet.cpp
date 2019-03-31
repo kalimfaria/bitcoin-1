@@ -3479,6 +3479,34 @@ UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue generateSequentially(int blocks) {
+    JSONRPCRequest request = new JSONRPCRequest();
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+
+    }
+
+    int num_generate = blocks; //request.params[0].get_int();
+    uint64_t max_tries = 1000000;
+
+    std::shared_ptr<CReserveScript> coinbase_script;
+    pwallet->GetScriptForMining(coinbase_script);
+
+    // If the keypool is exhausted, no script is returned at all.  Catch this.
+    if (!coinbase_script) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    }
+
+    //throw an error if no script was provided
+    if (coinbase_script->reserveScript.empty()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
+    }
+
+    return generateBlocksSequentially(coinbase_script, num_generate, max_tries, true);
+}
+
 UniValue generate(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
