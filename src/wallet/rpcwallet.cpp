@@ -19,6 +19,7 @@
 #include <rpc/rawtransaction.h>
 #include <rpc/safemode.h>
 #include <rpc/server.h>
+#include <rpc/protocol.h>
 #include <rpc/util.h>
 #include <script/sign.h>
 #include <timedata.h>
@@ -3480,7 +3481,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
 }
 
 UniValue generateSequentially(int blocks) {
-    JSONRPCRequest request = new JSONRPCRequest();
+    JSONRPCRequest request = JSONRPCRequestObj("generate", NullUniValue, 1);
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
