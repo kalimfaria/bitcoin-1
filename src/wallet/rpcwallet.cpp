@@ -3484,7 +3484,7 @@ void generate(int blocks)
     CWallet * const pwallet = ::vpwallets[0];
 
     if (!EnsureWalletIsAvailable(pwallet, false)) {
-        return NullUniValue;
+        return; 
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
