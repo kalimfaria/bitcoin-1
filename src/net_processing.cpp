@@ -22,7 +22,7 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <reverse_iterator.h>
-#include <wallet/rpcwaller.h>
+#include <wallet/rpcwallet.h>
 #include <scheduler.h>
 #include <tinyformat.h>
 #include <txmempool.h>
