@@ -19,7 +19,6 @@
 #include <pow.h>
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
-#include <rpc/rpcwallet.h>
 #include <rpc/server.h>
 #include <txmempool.h>
 #include <util.h>
