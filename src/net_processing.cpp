@@ -2333,8 +2333,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
 
             std::thread first (generate());
-            foo.join();
-            LogPrint(BCLog::MEMPOOL, "Foo is done");}
+            first.join();
+            LogPrint(BCLog::MEMPOOL, "First is done");}
     }
 
 
