@@ -3491,8 +3491,8 @@ bool ProcessNewBlockSequentially(const CChainParams& chainparams, const std::sha
 
     NotifyHeaderTipSequentially();
 
-    CValidationState state; // Only used to report errors, not invalidity - ignore it
-    if (!g_chainstate.ActivateBestChain(state, chainparams, pblock))
+    CValidationState state1; // Only used to report errors, not invalidity - ignore it
+    if (!g_chainstate.ActivateBestChain(state1, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
     return true;
