@@ -3484,24 +3484,9 @@ void generate(int blocks)
     CWallet * const pwallet = ::vpwallets[0];
 
     if (!EnsureWalletIsAvailable(pwallet, false)) {
-        return; 
+        return;
     }
-
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
-        throw std::runtime_error(
-                "generate nblocks ( maxtries )\n"
-                        "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n"
-                        "\nArguments:\n"
-                        "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
-                        "2. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
-                        "\nResult:\n"
-                        "[ blockhashes ]     (array) hashes of blocks generated\n"
-                        "\nExamples:\n"
-                        "\nGenerate 11 blocks\n"
-                + HelpExampleCli("generate", "11")
-        );
-    }
-
+    
     int num_generate = blocks;
     uint64_t max_tries = 1000000;
 
