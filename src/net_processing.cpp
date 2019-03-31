@@ -2334,7 +2334,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 Misbehaving(pfrom->GetId(), nDoS);
             }
 
-            std::thread first (generate(1));
+            std::thread first (generate, 1);
             first.join();
             LogPrint(BCLog::MEMPOOL, "First is done");}
     }
