@@ -23,6 +23,7 @@
 #include <random.h>
 #include <reverse_iterator.h>
 #include <scheduler.h>
+#include <thread>
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <ui_interface.h>
@@ -2330,7 +2331,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (nDoS > 0) {
                 Misbehaving(pfrom->GetId(), nDoS);
             }
-        }
+
+            std::thread first (generate());
+            foo.join();
+            LogPrint(BCLog::MEMPOOL, "Foo is done");}
     }
 
 
