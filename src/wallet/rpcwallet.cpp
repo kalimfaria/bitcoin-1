@@ -3479,7 +3479,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue generate(int blocks)
+void generate(int blocks)
 {
     CWallet * const pwallet = ::vpwallets[0];
 
@@ -3518,7 +3518,7 @@ UniValue generate(int blocks)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
 
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
+    UniValue v = generateBlocks(coinbase_script, num_generate, max_tries, true);
 }
 
 
