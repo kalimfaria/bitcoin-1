@@ -24,7 +24,7 @@
 #include <reverse_iterator.h>
 #include <scheduler.h>
 #include <thread>
-#include <rpc/rpcwallet.h>
+#include <wallet/rpcwallet.h>
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <ui_interface.h>
