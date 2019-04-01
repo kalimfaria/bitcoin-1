@@ -58,7 +58,7 @@ UniValue sendsignedrawtransaction(std::string hex)
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     LogPrintf("After Making transaction");
     const uint256& hashTx = tx->GetHash();
-
+    LogPrintf("Getting transaction hash");
     CAmount nMaxRawTxFee = maxTxFee;
     LogPrintf("MaxFee: " + nMaxRawTxFee);
 
