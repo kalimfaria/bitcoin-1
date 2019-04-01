@@ -45,20 +45,26 @@ UniValue sendsignedrawtransaction(std::string hex)
 {
     LogPrintf("Reached beginning of sendsignedrawtransaction");
     ObserveSafeMode();
-
+    LogPrintf("After observe safe mode");
     std::promise<void> promise;
 
     // parse hex string from parameter
     CMutableTransaction mtx;
-    if (!DecodeHexTx(mtx, hex))
+    if (!DecodeHexTx(mtx, hex)) {
+        LogPrintf("Can't decode transaction");
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+    LogPrintf("Before Making transaction");
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    LogPrintf("After Making transaction");
     const uint256& hashTx = tx->GetHash();
 
     CAmount nMaxRawTxFee = maxTxFee;
     LogPrintf("MaxFee: " + nMaxRawTxFee);
 
-    { // cs_main scope
+
+    {   LogPrintf("Entering lock");
+        // cs_main scope
         LOCK(cs_main);
         CCoinsViewCache &view = *pcoinsTip;
         bool fHaveChain = false;
@@ -67,6 +73,7 @@ UniValue sendsignedrawtransaction(std::string hex)
             fHaveChain = !existingCoin.IsSpent();
         }
         bool fHaveMempool = mempool.exists(hashTx);
+        LogPrintf("Does mempool have tx:" + fHaveMempool);
         if (!fHaveMempool && !fHaveChain) {
             // push to local node and sync with wallets
             CValidationState state;

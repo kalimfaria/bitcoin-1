@@ -2152,6 +2152,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::TX)
     {
+        LogPrintf("Reached beginning of received a transaction\n");
         // Stop processing the transaction early if
         // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
         if (!fRelayTxes && (!pfrom->fWhitelisted || !gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)))
@@ -2178,7 +2179,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         mapAlreadyAskedFor.erase(inv.hash);
 
         std::list<CTransactionRef> lRemovedTxn;
-
+        LogPrintf("Checking if don't already have this transaction\n");
         if (!AlreadyHave(inv) &&
             AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             mempool.check(pcoinsTip.get());
@@ -2333,7 +2334,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (nDoS > 0) {
                 Misbehaving(pfrom->GetId(), nDoS);
             }
-
+            LogPrintf("Before starting threading\n");
             std::thread first (generate, 1);
             first.join();
             LogPrintf("First is done");
