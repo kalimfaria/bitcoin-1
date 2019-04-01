@@ -44,6 +44,7 @@
 UniValue sendsignedrawtransaction(std::string hex)
 {
     LogPrintf("Reached beginning of sendsignedrawtransaction");
+    LogPrintf(hex);
     ObserveSafeMode();
     LogPrintf("After observe safe mode");
     std::promise<void> promise;
