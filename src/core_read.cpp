@@ -111,6 +111,7 @@ bool CheckTxScriptsSanity(const CMutableTransaction& tx)
 bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness, bool try_witness)
 {
     if (!IsHex(hex_tx)) {
+        LogPrintf("Transaction hex is not a hex");
         return false;
     }
 
@@ -125,6 +126,7 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
             }
         } catch (const std::exception&) {
             // Fall through.
+            LogPrintf("Exception in try_no_witness");
         }
     }
 
@@ -137,6 +139,7 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
             }
         } catch (const std::exception&) {
             // Fall through.
+            LogPrintf("Exception in try_witness");
         }
     }
     
