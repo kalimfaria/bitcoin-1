@@ -3486,7 +3486,7 @@ void generate(int blocks)
     if (!EnsureWalletIsAvailable(pwallet, false)) {
         return;
     }
-    
+
     int num_generate = blocks;
     uint64_t max_tries = 1000000;
 

@@ -43,6 +43,7 @@
 
 UniValue sendsignedrawtransaction(std::string hex)
 {
+    LogPrintf("Reached beginning of sendsignedrawtransaction");
     ObserveSafeMode();
 
     std::promise<void> promise;
@@ -55,6 +56,7 @@ UniValue sendsignedrawtransaction(std::string hex)
     const uint256& hashTx = tx->GetHash();
 
     CAmount nMaxRawTxFee = maxTxFee;
+    LogPrintf("MaxFee: " + nMaxRawTxFee);
 
     { // cs_main scope
         LOCK(cs_main);
@@ -98,13 +100,14 @@ UniValue sendsignedrawtransaction(std::string hex)
         }
 
     } // cs_main
-
+    LogPrintf("Waiting for future response");
     promise.get_future().wait();
 
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     CInv inv(MSG_TX, hashTx);
+    LogPrintf("Transaction placed in outgoing queue");
     g_connman->ForEachNode([&inv](CNode* pnode)
                            {
                                pnode->PushInventory(inv);
@@ -543,10 +546,14 @@ UniValue signrawtransactionwithkeynochecks(const JSONRPCRequest& request, UniVal
 
 UniValue createsignrawtransaction(const JSONRPCRequest& request) {
     validateParams(request);
+    LogPrintf("Input params are validated");
     UniValue hexString = createrawtransactionnochecks(request);
+    LogPrintf("Transaction is created");
     UniValue signedTransaction = signrawtransactionwithkeynochecks(request, hexString);
+    LogPrintf("Transaction is signed");
     std::string hex = "hex";
     UniValue result = find_value(signedTransaction, hex);
+    LogPrintf("Going to send transaction.");
     return sendsignedrawtransaction(result.get_str());
 }
 
