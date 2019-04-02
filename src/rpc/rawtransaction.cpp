@@ -61,7 +61,6 @@ UniValue sendsignedrawtransaction(std::string hex)
         const uint256 &hashTx = tx->GetHash();
         LogPrintf("Getting transaction hash");
         CAmount nMaxRawTxFee = maxTxFee;
-        LogPrintf("MaxFee: " + nMaxRawTxFee);
         LogPrintf("Entering lock");
         {
             // cs_main scope
