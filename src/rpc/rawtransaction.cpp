@@ -43,84 +43,90 @@
 
 UniValue sendsignedrawtransaction(std::string hex)
 {
-    LogPrintf("Reached beginning of sendsignedrawtransaction");
-    ObserveSafeMode();
-    LogPrintf("After observe safe mode");
-    std::promise<void> promise;
+    try {
+        LogPrintf("Reached beginning of sendsignedrawtransaction");
+        ObserveSafeMode();
+        LogPrintf("After observe safe mode");
+        std::promise<void> promise;
 
-    // parse hex string from parameter
-    CMutableTransaction mtx;
-    if (!DecodeHexTx(mtx, hex)) {
-        LogPrintf("Can't decode transaction");
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
-    }
-    LogPrintf("Before Making transaction");
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    LogPrintf("After Making transaction");
-    const uint256& hashTx = tx->GetHash();
-    LogPrintf("Getting transaction hash");
-    CAmount nMaxRawTxFee = maxTxFee;
-    LogPrintf("MaxFee: " + nMaxRawTxFee);
-
-
-    {   LogPrintf("Entering lock");
-        // cs_main scope
-        LOCK(cs_main);
-        CCoinsViewCache &view = *pcoinsTip;
-        bool fHaveChain = false;
-        for (size_t o = 0; !fHaveChain && o < tx->vout.size(); o++) {
-            const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
-            fHaveChain = !existingCoin.IsSpent();
+        // parse hex string from parameter
+        CMutableTransaction mtx;
+        if (!DecodeHexTx(mtx, hex)) {
+            LogPrintf("Can't decode transaction");
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
         }
-        bool fHaveMempool = mempool.exists(hashTx);
-        LogPrintf("Does mempool have tx:" + fHaveMempool);
-        if (!fHaveMempool && !fHaveChain) {
-            // push to local node and sync with wallets
-            CValidationState state;
-            bool fMissingInputs;
-            if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
-                                    nullptr /* plTxnReplaced */, false /* bypass_limits */, nMaxRawTxFee)) {
-                if (state.IsInvalid()) {
-                    throw JSONRPCError(RPC_TRANSACTION_REJECTED, FormatStateMessage(state));
-                } else {
-                    if (fMissingInputs) {
-                        throw JSONRPCError(RPC_TRANSACTION_ERROR, "Missing inputs");
-                    }
-                    throw JSONRPCError(RPC_TRANSACTION_ERROR, FormatStateMessage(state));
-                }
-            } else {
-                // If wallet is enabled, ensure that the wallet has been made aware
-                // of the new transaction prior to returning. This prevents a race
-                // where a user might call sendrawtransaction with a transaction
-                // to/from their wallet, immediately call some wallet RPC, and get
-                // a stale result because callbacks have not yet been processed.
-                CallFunctionInValidationInterfaceQueue([&promise] {
-                    promise.set_value();
-                });
+        LogPrintf("Before Making transaction");
+        CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+        LogPrintf("After Making transaction");
+        const uint256 &hashTx = tx->GetHash();
+        LogPrintf("Getting transaction hash");
+        CAmount nMaxRawTxFee = maxTxFee;
+        LogPrintf("MaxFee: " + nMaxRawTxFee);
+
+
+        {
+            LogPrintf("Entering lock");
+            // cs_main scope
+            LOCK(cs_main);
+            CCoinsViewCache &view = *pcoinsTip;
+            bool fHaveChain = false;
+            for (size_t o = 0; !fHaveChain && o < tx->vout.size(); o++) {
+                const Coin &existingCoin = view.AccessCoin(COutPoint(hashTx, o));
+                fHaveChain = !existingCoin.IsSpent();
             }
-        } else if (fHaveChain) {
-            throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
-        } else {
-            // Make sure we don't block forever if re-sending
-            // a transaction already in mempool.
-            promise.set_value();
-        }
+            bool fHaveMempool = mempool.exists(hashTx);
+            LogPrintf("Does mempool have tx:" + fHaveMempool);
+            if (!fHaveMempool && !fHaveChain) {
+                // push to local node and sync with wallets
+                CValidationState state;
+                bool fMissingInputs;
+                if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
+                                        nullptr /* plTxnReplaced */, false /* bypass_limits */, nMaxRawTxFee)) {
+                    if (state.IsInvalid()) {
+                        throw JSONRPCError(RPC_TRANSACTION_REJECTED, FormatStateMessage(state));
+                    } else {
+                        if (fMissingInputs) {
+                            throw JSONRPCError(RPC_TRANSACTION_ERROR, "Missing inputs");
+                        }
+                        throw JSONRPCError(RPC_TRANSACTION_ERROR, FormatStateMessage(state));
+                    }
+                } else {
+                    // If wallet is enabled, ensure that the wallet has been made aware
+                    // of the new transaction prior to returning. This prevents a race
+                    // where a user might call sendrawtransaction with a transaction
+                    // to/from their wallet, immediately call some wallet RPC, and get
+                    // a stale result because callbacks have not yet been processed.
+                    CallFunctionInValidationInterfaceQueue([&promise] {
+                        promise.set_value();
+                    });
+                }
+            } else if (fHaveChain) {
+                throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
+            } else {
+                // Make sure we don't block forever if re-sending
+                // a transaction already in mempool.
+                promise.set_value();
+            }
 
-    } // cs_main
-    LogPrintf("Waiting for future response");
-    promise.get_future().wait();
+        } // cs_main
+        LogPrintf("Waiting for future response");
+        promise.get_future().wait();
 
-    if(!g_connman)
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+        if (!g_connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    CInv inv(MSG_TX, hashTx);
-    LogPrintf("Transaction placed in outgoing queue");
-    g_connman->ForEachNode([&inv](CNode* pnode)
-                           {
-                               pnode->PushInventory(inv);
-                           });
-    LogPrintf("Verification: %s\n", tx->ToHashString());
-    return hashTx.GetHex();
+        CInv inv(MSG_TX, hashTx);
+        LogPrintf("Transaction placed in outgoing queue");
+        g_connman->ForEachNode([&inv](CNode *pnode) {
+            pnode->PushInventory(inv);
+        });
+        LogPrintf("Verification: %s\n", tx->ToHashString());
+        return hashTx.GetHex();
+    }  catch (const std::exception&) {
+        LogPrintf("Exception: " + exception.what());
+        UniValue outputs_dict = UniValue(UniValue::VOBJ);
+        return outputs_dict;
+    }
 }
 
 
