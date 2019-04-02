@@ -123,7 +123,8 @@ UniValue sendsignedrawtransaction(std::string hex)
         LogPrintf("Verification: %s\n", tx->ToHashString());
         return hashTx.GetHex();
     }  catch (const std::exception &exception) {
-        LogPrintf(std::string("Exception: ") + std::string(exception.what()));
+        std::cout << std::string("Exception: ") << " " << std::string(exception.what());
+        
         UniValue outputs_dict = UniValue(UniValue::VOBJ);
         return outputs_dict;
     }
