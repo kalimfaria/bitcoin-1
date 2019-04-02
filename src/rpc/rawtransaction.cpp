@@ -62,8 +62,6 @@ UniValue sendsignedrawtransaction(std::string hex)
         LogPrintf("Getting transaction hash");
         CAmount nMaxRawTxFee = maxTxFee;
         LogPrintf("MaxFee: " + nMaxRawTxFee);
-
-
         {
             LogPrintf("Entering lock");
             // cs_main scope
@@ -124,7 +122,7 @@ UniValue sendsignedrawtransaction(std::string hex)
         return hashTx.GetHex();
     }  catch (const std::exception &exception) {
         std::cout << std::string("Exception: ") << " " << std::string(exception.what());
-        
+
         UniValue outputs_dict = UniValue(UniValue::VOBJ);
         return outputs_dict;
     }
