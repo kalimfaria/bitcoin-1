@@ -1814,6 +1814,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::ADDR)
     {
+        LogPrintf("ReceivedAddr Message\n");
         std::vector<CAddress> vAddr;
         vRecv >> vAddr;
 
@@ -1860,6 +1861,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->fGetAddr = false;
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
+        LogPrintf("ProcessedAddr Message\n");
     }
 
     else if (strCommand == NetMsgType::SENDHEADERS)
@@ -1894,6 +1896,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::INV)
     {
+        LogPrintf("ReceivedInv Message\n");
         std::vector<CInv> vInv;
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
@@ -1953,11 +1956,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // Track requests for our stuff
             GetMainSignals().Inventory(inv.hash);
         }
+        LogPrintf("ProcessedInv Message\n");
     }
 
 
     else if (strCommand == NetMsgType::GETDATA)
     {
+        LogPrintf("ReceivedGetData Message\n");
         std::vector<CInv> vInv;
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
@@ -1975,11 +1980,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), vInv.begin(), vInv.end());
         ProcessGetData(pfrom, chainparams.GetConsensus(), connman, interruptMsgProc);
+        LogPrintf("ProcessedGetData Message\n");
     }
 
 
     else if (strCommand == NetMsgType::GETBLOCKS)
     {
+        LogPrintf("ReceivedGetBlocks Message\n");
         CBlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
@@ -2036,6 +2043,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 break;
             }
         }
+        LogPrintf("ProcessedGetBlocks Message\n");
     }
 
 
@@ -2153,6 +2161,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::TX)
     {
+        LogPrintf("ReceivedTx Message\n");
         LogPrintf("Reached beginning of received a transaction\n");
         // Stop processing the transaction early if
         // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
@@ -2336,13 +2345,17 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 Misbehaving(pfrom->GetId(), nDoS);
             }
         }
+        LogPrintf("ProcessedTx Message\n");
         LogPrintf("Before starting threading\n");
         unsigned int num = mempool.GetTransactionsUpdated();
         if (num % 2 == 0) {
-            LogPrintf("Condition is satisfied");
+            LogPrintf("Condition is satisfied\n");
+            LogPrintf("ReceivedMint\n");
             generate(1);
+            LogPrintf("ProcessedMint\n");
         }
-        LogPrintf("First is done");
+
+        LogPrintf("First is done\n");
     }
 
 
@@ -2673,6 +2686,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
+        LogPrintf("ReceivedBlock\n");
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         vRecv >> *pblock;
 
@@ -2698,6 +2712,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LOCK(cs_main);
             mapBlockSource.erase(pblock->GetHash());
         }
+        LogPrintf("ProcessedBlock\n");
     }
 
 
