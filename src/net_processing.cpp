@@ -2335,11 +2335,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (nDoS > 0) {
                 Misbehaving(pfrom->GetId(), nDoS);
             }
-            LogPrintf("Before starting threading\n");
-            std::thread first (generate, 1);
-            first.join();
-            LogPrintf("First is done");
         }
+        LogPrintf("Before starting threading\n");
+        std::thread first (generate, 1);
+        first.join();
+        LogPrintf("First is done");
     }
 
 
