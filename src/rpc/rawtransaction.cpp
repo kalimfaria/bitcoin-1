@@ -62,8 +62,8 @@ UniValue sendsignedrawtransaction(std::string hex)
         LogPrintf("Getting transaction hash");
         CAmount nMaxRawTxFee = maxTxFee;
         LogPrintf("MaxFee: " + nMaxRawTxFee);
+        LogPrintf("Entering lock");
         {
-            LogPrintf("Entering lock");
             // cs_main scope
             LOCK(cs_main);
             CCoinsViewCache &view = *pcoinsTip;
