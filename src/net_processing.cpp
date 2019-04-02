@@ -2337,9 +2337,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
         }
         LogPrintf("Before starting threading\n");
-//        std::thread first (generate, 1);
-        //        first.join();
-        generate(1);
+        unsigned int num = mempool.GetTransactionsUpdated();
+        if (num % 2 == 0) {
+            LogPrintf("Condition is satisfied");
+            generate(1);
+        }
         LogPrintf("First is done");
     }
 
